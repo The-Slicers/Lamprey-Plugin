@@ -1,0 +1,3 @@
+[submodule "grid-apps"]
+	path = grid-apps
+	url = https://github.com/GridSpace/grid-apps
