@@ -1,0 +1,13 @@
+{
+  "name": "lamprey-plugin",
+  "version": "0.0.1",
+  "description": "Plugin for converting GridSpace's grid-apps into a Quorum language plugin",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "BSD-3",
+  "type": "commonjs"
+}
