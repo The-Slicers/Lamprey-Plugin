@@ -1,0 +1,6 @@
+# build dirs
+classes/
+res/
+
+*.dll
+*.jar
