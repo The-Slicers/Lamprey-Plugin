@@ -1,0 +1,5 @@
+package Libraries.Model
+
+class Slicer
+    system action JSPrint(text message, integer value) returns integer
+end
