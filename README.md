@@ -1,4 +1,4 @@
-Lamprey-Plugin
+# Lamprey-Plugin
 
 WIP plugin for the Quorum programming language integrating the GridSpace slicer.
 
