@@ -75,7 +75,7 @@ public class Janus {
             }
             if (nativeFile != null)
             {
-                System.out.println(nativeFile);
+                // System.out.println(nativeFile);
                 Janus.nativePath = nativeFile;
                 System.load(nativeFile);
                 Janus.operatingSystem = System.getProperty("os.name");

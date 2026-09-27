@@ -7,11 +7,12 @@ import Janus.Janus;
 
 public class Main {
     static {
-        System.loadLibrary("Janus");
+        // System.loadLibrary("Janus");
         System.load(new java.io.File("").getAbsolutePath() + "\\Janus.dll");
     }
 
     public static void main(String[] args) throws Exception {
+    	System.out.println("This is java?");
         Janus.PrintData();
     }
 }

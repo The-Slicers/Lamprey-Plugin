@@ -1,4 +1,4 @@
-#include "com_example_Janus_Janus.h"
+#include "Janus_Janus.h"
 #include "../Janus.h"
 
 extern "C" {

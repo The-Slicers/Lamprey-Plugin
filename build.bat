@@ -1,5 +1,5 @@
 # using msvc compiler in visual studio developer prompts
-call cl Janus.cpp /LD /DLL /EHsc
+call cl Janus.cpp jni\Janus_Janus.cpp /LD /DLL /EHsc
 @REM call mkdir classes
 call mkdir jni
 call javac -d . -h jni .\Janus\Janus.java
