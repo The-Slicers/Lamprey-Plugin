@@ -12,63 +12,135 @@ Quorum call to Java	looks like:
 /*Track errors?*/
 
 // OrcaPlugin, SlicePlugin, SlicerPlugin, ... not sure what to name
-// package Slice
+package Slice
 use Libraries.System.File
 
 class Slicer
-	// variables
-	private boolean openSession = false
-	private boolean modelLoaded = false
+	// --------------------------------------------------------------------------
+	// ** Private Variables **
+	private boolean openSession  = false
+	private boolean modelLoaded  = false
 	private boolean settingFiles = 0
+	private text    errorMessage = ""
 
-	// return true if there is an open slicing session
+	// --------------------------------------------------------------------------
+	// ** Public Functions **
+	// Opens a slicing session, or returns true if one is open
 	action Open returns boolean
-		if openSession
+		if openSession = true
 			return true
 		end
-		if //call to java to open session fails
-			//return error/false
+		if JavaOpen() = false
+			return ErrorMsg("Slicing session failed to open.")
 		end
-		openSession = true
-		modelLoaded = false
-		return true
-	end //action Open
 
-	action Close
-		if openSession
-			//call to java to close session
-		end
-		openSession = false
-		modelLoaded = false
-		settingFiles = false
+		// New Session Opened, Reset Values
+		openSession  = true
+		modelLoaded  = false
+		settingFiles = 0
+		errorMessage = ""
+
+		return true
 	end
 
-	// load 3D model
+	// Closes an open session
+	action Close
+		if openSession = true
+			JavaClose()
+		end
+		
+		// Reset Values
+		openSession  = false
+		modelLoaded  = false
+		settingFiles = 0
+	end
+
+	// Load 3D model
 	action LoadModel (text filePath) returns boolean
-		// check that file exists, if not return false
-		// check that session is open, if not return false
-		// try opening file with java call, if can't return error/false
+		if pathExists(filePath) = false
+			return false
+		end
+		if Open() = false
+			return false
+		end
+		if JavaLoadModel(filePath) = false
+			modelLoaded = false
+			return ErrorMsg("Model could not load: " + JavaErrorMsg())
+		end
+		
 		// if it makes it here file was loaded
 		modelLoaded = true
+		errorMessage = ""
 		return true
-	end // action LoadModel
+	end
 
-	// load the settings files (printer, filament, process)
+	// Load the settings files (printer, filament, process)
+	// Maybe rename since it only takes 1 setting file?
 	// JSON files
 	action LoadSettings (text filePath) returns boolean
 		// check that file exists, if not return false
 		// check that session is open, if not return false
 		// try opening file with java call, if can't return error/false
+		
 		// if it makes it here file was loaded
+		settingFiles += 1
+		errorMessage = ""
 		return true
-	end //action LoadSettings
+	end
+
+	// function to load all 3 setting files at once instead of separately?
 
 	// functions to change settings maybe?
+	// what settings do we want a user to be able to change?
 
+	// Slices the model
 	action Slice (text gcodePath) returns boolean
 		// if session not open, return error/false
 		// if model not loaded, return error/false
-		// if settingFiles = 0, return error/false
-		// check gcodePath
-		// try slcing with java call, if can't return error/false
-	end // action Slice
+		// if settingFiles < 3, return error/false
+			 // assuming we require printer, filament, process JSON files?
+		// check gcodePath exists, otherwise return error/false
+		// try slcing java call, if can't return error/false
+
+		// if here slice succeeded
+		errorMessage = ""
+		return true
+	end
+
+	// --------------------------------------------------------------------------
+	// ** PRIVATE HELPER FUNCTIONS **
+	// Updates the class's errorMessage & returns false
+	private action ErrorMsg (text msg) returns boolean
+		errorMessage = msg
+		return false
+	end
+
+	/*
+	Check that file path exists
+	Quorum File:
+			Quorum/Library/Standard/Libraries/System/File.quorum
+			Lines 288 & 308
+	*/
+	private action pathExists(text filePath) returns boolean
+		if path = ""
+			return ErrorMsg("No path was given.")
+		end
+		File fileObj
+		fileObj:SetPath(filePath)
+		if fileObj:Exists() = false
+			return ErrorMsg("File Path: " + filePath + " does not exist.")
+		end
+
+		// otherwise file path exists
+		return true
+	end
+
+	// --------------------------------------------------------------------------
+	// ** JAVA CALLS **
+	private system action JavaOpen												// returns bool? int?
+	private system action JavaClose
+	private system action JavaLoadModel(text filePath) 		// returns bool? int?
+	private system action JavaLoadSettings(text filePath)	// returns bool? int?
+	private system action JavaSlice(text gcodePath) 			// returns bool? int?
+	private system action JavaErrorMsg returns text
+end //of slicer class
