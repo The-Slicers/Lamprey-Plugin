@@ -1,6 +1,6 @@
-package Janus;
+package plugins.quorum.Libraries.Game.Graphics.Models.Printing;
 
-public class Janus {
+public class Slicer {
     static String nativePath = null;
     static String operatingSystem = null;
 
@@ -53,7 +53,7 @@ public class Janus {
                 // if (System.getProperty("os.arch").contains("x86")) {
                 //     // nativeFile = runLocation + "\\jni\\libGameEngineCPlugins32.dll";
                 // } else
-                    nativeFile = runLocation + "\\Janus.dll";
+                    nativeFile = runLocation + "\\Slicer.dll";
             }
             else
             {
@@ -76,9 +76,9 @@ public class Janus {
             if (nativeFile != null)
             {
                 // System.out.println(nativeFile);
-                Janus.nativePath = nativeFile;
+                Slicer.nativePath = nativeFile;
                 System.load(nativeFile);
-                Janus.operatingSystem = System.getProperty("os.name");
+                Slicer.operatingSystem = System.getProperty("os.name");
             }
         }
         catch (Exception ex)
@@ -99,6 +99,12 @@ public class Janus {
             return 3;
     }
 
+    // TODO: support quorum packed Number32BitArray
+    public static native void Slice();
 
-    public static native void PrintData();
+    // uncomment to test
+    public static void main(String[] args) throws Exception {
+    	System.out.println("This is java?");
+        Slice();
+    }
 }

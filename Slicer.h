@@ -2,4 +2,4 @@
 
 #include <iostream>
 
-void PrintData();
+void Slice(float* vertex_data);
