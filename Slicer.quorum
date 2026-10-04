@@ -2,6 +2,7 @@
 Just testing for now.
 Trying out code in Quorum that does the calling of Java functions
 that would then call C++\OrcaSlicer.
+For the non-CLI path.
 */
 
 /*
@@ -9,19 +10,17 @@ Quorum call to Java	looks like:
 	system action actionName (parameters) returns dataType
 */
 
-/*Track errors?*/
-
-// OrcaPlugin, SlicePlugin, SlicerPlugin, ... not sure what to name
+// ... not sure what to name
 package Slice
 use Libraries.System.File
 
 class Slicer
 	// --------------------------------------------------------------------------
 	// ** Private Variables **
-	private boolean openSession  = false
-	private boolean modelLoaded  = false
-	private boolean settingFiles = 0
-	private text    errorMessage = ""
+	private boolean openSession  = false	// True if open OrcaSlicer session
+	private boolean modelLoaded  = false	// True if a model is loaded
+	private boolean settingFiles = 0 			// Number of setting files loaded
+	private text    errorMessage = ""			// Most recent error message
 
 	// --------------------------------------------------------------------------
 	// ** Public Functions **
@@ -43,6 +42,7 @@ class Slicer
 		return true
 	end
 
+	// ------------------------
 	// Closes an open session
 	action Close
 		if openSession = true
@@ -55,6 +55,7 @@ class Slicer
 		settingFiles = 0
 	end
 
+	// ------------------------
 	// Load 3D model
 	action LoadModel (text filePath) returns boolean
 		if pathExists(filePath) = false
@@ -74,25 +75,57 @@ class Slicer
 		return true
 	end
 
+	// ------------------------
 	// Load the settings files (printer, filament, process)
 	// Maybe rename since it only takes 1 setting file?
 	// JSON files
 	action LoadSettings (text filePath) returns boolean
-		// check that file exists, if not return false
-		// check that session is open, if not return false
-		// try opening file with java call, if can't return error/false
-		
+		if pathExists(filePath) = false
+			return false
+		end
+		if Open() = false
+			return false
+		end
+		if JavaLoadSettings(filePath) = false
+			return ErrorMsg("Could not load settings file: " + JavaErrorMsg())
+		end
+
 		// if it makes it here file was loaded
 		settingFiles += 1
 		errorMessage = ""
 		return true
 	end
 
+	// ------------------------
 	// function to load all 3 setting files at once instead of separately?
+	/*
+		Load all 3 settings files at once.
+		Parameters:
+			printerPath		The printer JSON file path.
+			filamentPath	The filament JSON file path.
+			processPath		The process JSON file path.
+		Returns:
+			True if all 3 successfully loaded.
+	*/
+	action LoadJSONsettings(text printerPath, text filamentPath, text processPath) returns boolean
+		if LoadSettings(printerPath) = false
+			return false
+		end
+		if LoadSettings(filamentPath) = false
+			return false
+		end
+		if LoadSettings(processPath) = false
+			return false
+		end
+
+		// All 3 loaded successfully
+		return true
+	end
 
 	// functions to change settings maybe?
 	// what settings do we want a user to be able to change?
 
+	// ------------------------
 	// Slices the model
 	action Slice (text gcodePath) returns boolean
 		// if session not open, return error/false
@@ -107,15 +140,27 @@ class Slicer
 		return true
 	end
 
+	// ------------------------
+	// Get the most recent error message
+	action GetErrorMessage returns text
+		return errorMessage
+	end
+
+	// ------------------------
+	// Check if there's an open OrcasSlicer session
+	action IsOpen returns boolean
+		return openSession
+	end
+
 	// --------------------------------------------------------------------------
 	// ** PRIVATE HELPER FUNCTIONS **
-	// Updates the class's errorMessage & returns false
+	// Updates the class's errorMessage variable & returns false
 	private action ErrorMsg (text msg) returns boolean
 		errorMessage = msg
 		return false
 	end
 
-	/*
+	/* ------------------------
 	Check that file path exists
 	Quorum File:
 			Quorum/Library/Standard/Libraries/System/File.quorum
