@@ -137,9 +137,9 @@ class Slicer
 
 	// --------------------------------------------------------------------------
 	// ** JAVA CALLS **
-	private system action JavaOpen												// returns bool? int?
+	private system action JavaOpen returns boolean
 	private system action JavaClose
-	private system action JavaLoadModel(text filePath) 		// returns bool? int?
+	private system action JavaLoadModel(text filePath) returns boolean
 	private system action JavaLoadSettings(text filePath)	// returns bool? int?
 	private system action JavaSlice(text gcodePath) 			// returns bool? int?
 	private system action JavaErrorMsg returns text
