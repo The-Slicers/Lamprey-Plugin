@@ -1,7 +1,4 @@
-# build dirs
-classes/
-res/
-
+# build files
 *.dll
 *.jar
 *.class
