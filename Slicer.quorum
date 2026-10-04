@@ -1,0 +1,74 @@
+/*
+Just testing for now.
+Trying out code in Quorum that does the calling of Java functions
+that would then call C++\OrcaSlicer.
+*/
+
+/*
+Quorum call to Java	looks like:
+	system action actionName (parameters) returns dataType
+*/
+
+/*Track errors?*/
+
+// OrcaPlugin, SlicePlugin, SlicerPlugin, ... not sure what to name
+// package Slice
+use Libraries.System.File
+
+class Slicer
+	// variables
+	private boolean openSession = false
+	private boolean modelLoaded = false
+	private boolean settingFiles = 0
+
+	// return true if there is an open slicing session
+	action Open returns boolean
+		if openSession
+			return true
+		end
+		if //call to java to open session fails
+			//return error/false
+		end
+		openSession = true
+		modelLoaded = false
+		return true
+	end //action Open
+
+	action Close
+		if openSession
+			//call to java to close session
+		end
+		openSession = false
+		modelLoaded = false
+		settingFiles = false
+	end
+
+	// load 3D model
+	action LoadModel (text filePath) returns boolean
+		// check that file exists, if not return false
+		// check that session is open, if not return false
+		// try opening file with java call, if can't return error/false
+		// if it makes it here file was loaded
+		modelLoaded = true
+		return true
+	end // action LoadModel
+
+	// load the settings files (printer, filament, process)
+	// JSON files
+	action LoadSettings (text filePath) returns boolean
+		// check that file exists, if not return false
+		// check that session is open, if not return false
+		// try opening file with java call, if can't return error/false
+		// if it makes it here file was loaded
+		return true
+	end //action LoadSettings
+
+	// functions to change settings maybe?
+
+	action Slice (text gcodePath) returns boolean
+		// if session not open, return error/false
+		// if model not loaded, return error/false
+		// if settingFiles = 0, return error/false
+		// check gcodePath
+		// try slcing with java call, if can't return error/false
+	end // action Slice
