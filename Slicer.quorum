@@ -11,7 +11,7 @@ Quorum call to Java	looks like:
 */
 
 // ... not sure what to name
-package Slice
+package Libraries.Game.Graphics.Models.Printing
 use Libraries.System.File
 
 class Slicer
@@ -48,7 +48,7 @@ class Slicer
 		if openSession = true
 			JavaClose()
 		end
-		
+
 		// Reset Values
 		openSession  = false
 		modelLoaded  = false
@@ -68,7 +68,7 @@ class Slicer
 			modelLoaded = false
 			return ErrorMsg("Model could not load: " + JavaErrorMsg())
 		end
-		
+
 		// if it makes it here file was loaded
 		modelLoaded = true
 		errorMessage = ""
