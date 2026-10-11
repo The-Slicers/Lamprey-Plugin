@@ -10,7 +10,24 @@ class Slicer
     public File gcode3mfFile
 
     // Returns the raw gcode/gcode file reference?
+    // Add animation index?
     action Slice(ModelData data) returns ByteArray
+        Array<MeshData> meshes = data:GetMeshes()
+		Array<Animation> animations = data:animations // :GetAnimations()
 
+		integer mi = 0
+		repeat while mi < meshes:GetSize()
+			MeshData mesh = meshes:Get(mi)
+			Number32BitArray vertices = mesh:GetVertices()
+			Integer32BitArray indices = mesh:GetIndices()
+
+			integer vi = 0
+			repeat while vi < vertices:GetSize()
+				integer x = vertices:Get(vi)
+				integer y = vertices:Get(vi+1)
+				integer x = vertices:Get(vi+2)
+				vi = vi + 3
+			end
+		end
     end
 end
