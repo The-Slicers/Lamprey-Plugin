@@ -1,0 +1,16 @@
+package Libraries.Game.Graphics.Models.Printing
+
+use Libraries.System.File
+use Libraries.Containers.Array
+use Libraries.Game.Graphics.Models.Data.ModelData
+use Libraries.Game.Graphics.Models.Data.ModelData
+
+class Slicer
+    public File modelOutFileOBJ
+    public File gcode3mfFile
+
+    // Returns the raw gcode/gcode file reference?
+    action Slice(ModelData data) returns ByteArray
+
+    end
+end
