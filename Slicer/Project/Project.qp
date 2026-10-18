@@ -5,7 +5,7 @@
     "IOSAssets" : "media",
     "IOS_BUNDLE" : "org.quorumlanguage",
     "IOS_DEVICE" : "iPhone 14 Simulator",
-    "Main" : "/SourceCode/Main.quorum",
+    "Main" : "/SourceCode/Slicer.quorum",
     "Project Version" : "1.0",
     "ProjectName" : "Slicer",
     "ProjectType" : "JavaType",

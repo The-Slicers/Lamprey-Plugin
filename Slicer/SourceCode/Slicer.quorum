@@ -1,33 +1,200 @@
-package Libraries.Game.Graphics.Models.Printing
+// package Slicer
 
 use Libraries.System.File
+use Libraries.System.Process // Running OrcaSlicer CLI, zip utility
+use Libraries.System.ProcessListener
+use Libraries.Data.Compression.Decompresser // extracting from the 3mf
 use Libraries.Containers.Array
+use Libraries.Containers.ByteArray
+use Libraries.Containers.Number32BitArray
+use Libraries.Containers.Integer32BitArray
 use Libraries.Game.Graphics.Models.Data.ModelData
-use Libraries.Game.Graphics.Models.Data.ModelData
+use Libraries.Game.Graphics.Models.Data.Animation
+use Libraries.Game.Graphics.Models.Data.MeshData
 
 class Slicer
-    public File modelOutFileOBJ
-    public File gcode3mfFile
+    public File workingDirRef
+    public File modelPrintDataFileOBJ
+    public File gCodeFile
 
-    // Returns the raw gcode/gcode file reference?
-    // Add animation index?
-    action Slice(ModelData data) returns ByteArray
+    // Returns success/fail, with accessible obj and gCode members
+    action Slice(File objFile, File outGCodeFile, File outDir) returns boolean
+        if outDir not= undefined
+//            output "undefined inner!"
+            SetWorkingDirectory(outDir)
+        end
+
+        text workingDir = workingDirRef:GetWorkingDirectory()
+        // gcode file will come later, when we have to unzip the archive containing it
+        outGCodeFile:SetWorkingDirectory(workingDir)
+
+        // call our slicer on the obj file
+        Process slicerProgram
+        slicerProgram:SetName("orca-slicer")
+        slicerProgram:SetDirectory(workingDirRef)
+
+        File sliceArchive
+        text sliceDataBaseName = "model"
+        text sliceArchiveName = sliceDataBaseName + ".3mf"
+        sliceArchive:SetPath(sliceArchiveName)
+
+        Array<text> slicerFlags
+        slicerFlags:Add("--slice=0") // export gcode in archive
+        slicerFlags:Add("--export-3mf") // archive format
+        slicerFlags:Add(sliceArchiveName)
+        slicerFlags:Add("--before-layer-change-gcode='G92 E0'") // clean filament extrusion before continuing after a layer
+
+        ProcessListener listener // get error message if necessary (not exit code)
+        slicerProgram:AddListener(listener)
+        slicerProgram:Run()
+
+        repeat while slicerProgram:IsAlive() end
+
+        integer exit_code = 0 // slicerProgram:GetExit()
+        if exit_code not= 0
+            output "Error: Got exit code: " + exit_code
+            return false
+        end
+
+        // create/override existing tmp directory for extracting and
+        File outDirTmp
+        text temp_dir_name = "tmp"
+        outDirTmp:SetWorkingDirectory(workingDir)
+        outDirTmp:SetPath(temp_dir_name)
+        if outDirTmp:Exists()
+            outDirTmp:Delete(true) // recursively clean up tmp dir if it exists
+        end
+        outDirTmp:CreateDirectory()
+        output outDirTmp:GetAbsolutePath()
+
+        // extract the 3mf archive (convert extension name to zip)
+        text zipName = sliceDataBaseName + ".zip"
+        output sliceArchive:GetAbsolutePath()
+        if sliceArchive:Exists() not= true
+            output sliceArchiveName + " archive file not found"
+            return false
+        end
+        boolean result = sliceArchive:Move(temp_dir_name + "/" + zipName)
+        if result not= true
+            output "Failed to move: " + zipName
+            return false
+        end
+        sliceArchive:SetWorkingDirectory(outDirTmp:GetPath())
+        sliceArchive:SetWorkingDirectory(workingDir + "\" + temp_dir_name)
+        sliceArchive:SetPath(zipName) // update path
+
+        Decompresser decompress
+        decompress:DecompressZip(sliceArchive)
+        sliceArchive:Close()
+
+
+        // fetch gcode from archive and perform cleanup
+        outGCodeFile:SetPath(temp_dir_name + "/Metadata/plate_1.gcode")
+        output workingDir
+        output outGCodeFile:GetAbsolutePath()
+        if outGCodeFile:Exists() not= true
+            output "gcode file not found"
+            return false
+        end
+        result = outGCodeFile:Move(workingDir)
+        if result not= true
+            output "Failed to move gcode file"
+            return false
+        end
+        outDirTmp:Delete(true) // recursively delete tmp dir
+
+        return true
+    end
+
+    // This version needs to generate the obj file to send to our slicer
+    action Slice(ModelData data, File outDir) returns boolean
+        if outDir not= undefined
+//            output "undefined outer!"
+            SetWorkingDirectory(outDir)
+        end
+        text workingDir = workingDirRef:GetWorkingDirectory()
+        output "Slicer working path: " + workingDir
+
+        // All meshes are loaded into a single model, assumed to be
+        // separated or pretransformed. If we need transformations
+        // (primarily world position) then we'll need more data exposed
+        // in ModelData or bring/pass in more data about the Model.
         Array<MeshData> meshes = data:GetMeshes()
-		Array<Animation> animations = data:animations // :GetAnimations()
+        // Array<Animation> animations = data:GetAnimations():GetAnimations() // animations not currently supported
+        numFiles = meshes:GetSize() // currently: each mesh generates an obj + gcode
+        text fileName = "model.obj"
+        integer mi = 0
+        repeat while mi < meshes:GetSize()
+//            mi = mi + 1
+//            MeshData mesh = meshes:Get(mi)
+//            File outFileOBJ = modelPrintDataFilesOBJ:Get(mi)
+//            WriteModelDataToOBJ(mesh, workingDir, fileName, outFileOBJ)
+        end
+        MeshData mesh = meshes:Get(mi)
+        File outFileOBJ = modelPrintDataFileOBJ
+        WriteModelDataToOBJ(mesh, workingDir, fileName, modelPrintDataFileOBJ)
 
-		integer mi = 0
-		repeat while mi < meshes:GetSize()
-			MeshData mesh = meshes:Get(mi)
-			Number32BitArray vertices = mesh:GetVertices()
-			Integer32BitArray indices = mesh:GetIndices()
+        return Slice(modelPrintDataFileOBJ, gCodeFile, undefined)
+    end
 
-			integer vi = 0
-			repeat while vi < vertices:GetSize()
-				integer x = vertices:Get(vi)
-				integer y = vertices:Get(vi+1)
-				integer x = vertices:Get(vi+2)
-				vi = vi + 3
-			end
-		end
+    action SetWorkingDirectory(File outDir)
+        workingDirRef = outDir
+    end
+
+    action WriteModelDataToOBJ(/* Array<MeshData> meshes */ MeshData mesh, text relDirPath, text fileName, File outFile)
+        // Will delete any existing obj file to write our file!
+        outFile:SetWorkingDirectory(relDirPath)
+        outFile:SetPath(fileName)
+        if outFile:Exists()
+            outFile:Delete()
+        end
+        outFile:OpenForWrite()
+
+        Number32BitArray vertices = mesh:GetVertices()
+        integer vi = 0
+        repeat while vi < vertices:GetSize()
+            vi = vi + 3
+            number x = vertices:Get(vi)
+            number y = vertices:Get(vi+1)
+            number z = vertices:Get(vi+2)
+            text line = "v " + x + " " + y + " " + z
+            output line
+            outFile:Write(line)
+        end
+
+        Number32BitArray normals = mesh:GetNormals()
+        integer ni = 0
+        repeat while ni < normals:GetSize()
+            ni = ni + 3
+            number xn = normals:Get(ni)
+            number yn = normals:Get(ni+1)
+            number zn = normals:Get(ni+2)
+            text line = "vn " + xn + " " + yn + " " + zn
+            output line
+            outFile:Write(line)
+        end
+
+        Integer32BitArray indices = mesh:GetIndices()
+        integer ii = 0
+        repeat while ii < indices:GetSize()
+            ii = ii + 3
+            integer a = indices:Get(ii)
+            integer b = indices:Get(ii+1)
+            integer c = indices:Get(ii+2)
+            text line = "f " + a + " " + b + " " + c
+            output line
+            outFile:Write(line)
+        end
+
+        outFile:Close()
+    end
+
+    action Main
+        ModelData x
+//        File outdir
+        File obj
+        obj:SetPath("cube.obj")
+        File outGCode
+        Slice(obj, outGCode, undefined)
     end
 end
