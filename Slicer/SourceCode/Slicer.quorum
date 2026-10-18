@@ -65,7 +65,7 @@ class Slicer
             outDirTmp:Delete(true) // recursively clean up tmp dir if it exists
         end
         outDirTmp:CreateDirectory()
-        output outDirTmp:GetAbsolutePath()
+        // output outDirTmp:GetAbsolutePath()
         File outDirSubDirs
         outDirSubDirs:SetWorkingDirectory(outDirTmp:GetAbsolutePath())
         outDirSubDirs:SetPath("Metadata")
@@ -83,7 +83,7 @@ class Slicer
 
         // extract the 3mf archive (convert extension name to zip)
         text zipName = sliceDataBaseName + ".zip"
-        output sliceArchive:GetAbsolutePath()
+        // output sliceArchive:GetAbsolutePath()
         if sliceArchive:Exists() not= true
             output sliceArchiveName + " archive file not found"
             return false
@@ -96,31 +96,31 @@ class Slicer
         sliceArchive:SetWorkingDirectory(outDirTmp:GetPath())
         sliceArchive:SetWorkingDirectory(workingDir + "\" + temp_dir_name)
         sliceArchive:SetPath(zipName) // update path
+//        output 1
+//        output sliceArchive:GetAbsolutePath()
+//        output sliceArchive:GetWorkingDirectory()
+//        output sliceArchive:GetPath()
 
         Decompresser decompress
         decompress:DecompressZip(sliceArchive)
         sliceArchive:Close()
 
-        i = 0
-        repeat while i < 10000
-
-        end
-
-
         // fetch gcode from archive and perform cleanup
-        outGCodeFile:SetPath(temp_dir_name)
-        output workingDir
-        output outGCodeFile:GetAbsolutePath()
+        outGCodeFile:SetPath(temp_dir_name + "/Metadata/plate_1.gcode")
+//        output workingDir
+//        output outGCodeFile:GetAbsolutePath()
         if outGCodeFile:Exists() not= true
             output "gcode file not found"
             return false
         end
-        result = outGCodeFile:Move(workingDir)
+        text outGCodeFileName = "model.gcode"
+        result = outGCodeFile:Move(workingDir + "/" + outGCodeFileName)
         if result not= true
             output "Failed to move gcode file"
             return false
         end
-//        outDirTmp:Delete(true) // recursively delete tmp dir
+        output "GCode file extracted to: " + outGCodeFile:GetAbsolutePath()
+        outDirTmp:Delete(true) // recursively delete tmp dir
 
         return true
     end
