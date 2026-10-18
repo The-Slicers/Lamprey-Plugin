@@ -66,6 +66,20 @@ class Slicer
         end
         outDirTmp:CreateDirectory()
         output outDirTmp:GetAbsolutePath()
+        File outDirSubDirs
+        outDirSubDirs:SetWorkingDirectory(outDirTmp:GetAbsolutePath())
+        outDirSubDirs:SetPath("Metadata")
+        outDirSubDirs:CreateDirectory()
+        outDirSubDirs:SetPath("Metadata/_rels")
+        outDirSubDirs:CreateDirectory()
+        outDirSubDirs:SetPath("3D")
+        outDirSubDirs:CreateDirectory()
+        outDirSubDirs:SetPath("3D/_rels")
+        outDirSubDirs:CreateDirectory()
+        outDirSubDirs:SetPath("3D/Objects")
+        outDirSubDirs:CreateDirectory()
+        outDirSubDirs:SetPath("_rels")
+        outDirSubDirs:CreateDirectory()
 
         // extract the 3mf archive (convert extension name to zip)
         text zipName = sliceDataBaseName + ".zip"
@@ -87,9 +101,14 @@ class Slicer
         decompress:DecompressZip(sliceArchive)
         sliceArchive:Close()
 
+        i = 0
+        repeat while i < 10000
+
+        end
+
 
         // fetch gcode from archive and perform cleanup
-        outGCodeFile:SetPath(temp_dir_name + "/Metadata/plate_1.gcode")
+        outGCodeFile:SetPath(temp_dir_name)
         output workingDir
         output outGCodeFile:GetAbsolutePath()
         if outGCodeFile:Exists() not= true
@@ -101,7 +120,7 @@ class Slicer
             output "Failed to move gcode file"
             return false
         end
-        outDirTmp:Delete(true) // recursively delete tmp dir
+//        outDirTmp:Delete(true) // recursively delete tmp dir
 
         return true
     end
