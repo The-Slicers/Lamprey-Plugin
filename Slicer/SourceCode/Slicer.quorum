@@ -13,17 +13,11 @@ use Libraries.Game.Graphics.Models.Data.Animation
 use Libraries.Game.Graphics.Models.Data.MeshData
 
 class Slicer
-    public File workingDirRef
-    public File modelPrintDataFileOBJ
+    File workingDirRef
     public File gCodeFile
 
     // Returns success/fail, with accessible obj and gCode members
-    action Slice(File objFile, File outGCodeFile, File outDir) returns boolean
-        if outDir not= undefined
-//            output "undefined inner!"
-            SetWorkingDirectory(outDir)
-        end
-
+    action Slice(File modelFile, File outGCodeFile) returns boolean
         text workingDir = workingDirRef:GetWorkingDirectory()
         // gcode file will come later, when we have to unzip the archive containing it
         outGCodeFile:SetWorkingDirectory(workingDir)
@@ -34,15 +28,19 @@ class Slicer
         slicerProgram:SetDirectory(workingDirRef)
 
         File sliceArchive
-        text sliceDataBaseName = "model"
-        text sliceArchiveName = sliceDataBaseName + ".3mf"
+        text sliceDataBaseName = modelFile:GetNameNoExtension()
+        text sliceArchiveName = sliceDataBaseName + ".zip"
         sliceArchive:SetPath(sliceArchiveName)
 
         Array<text> slicerFlags
         slicerFlags:Add("--slice=0") // export gcode in archive
-        slicerFlags:Add("--export-3mf") // archive format
+        slicerFlags:Add("--export-3mf") // archive format - can be named .zip instead of .3mf
         slicerFlags:Add(sliceArchiveName)
-        slicerFlags:Add("--before-layer-change-gcode='G92 E0'") // clean filament extrusion before continuing after a layer
+//        slicerFlags:Add("--before-layer-change-gcode='G92 E0'") // clean filament extrusion before continuing after a layer
+		slicerFlags:Add("--datadir");
+		slicerFlags:Add("datadir");
+		slicerFlags:Add("--load-settings='datadir/system/profiles/BBL/machine/Bambu Lab P2S 0.4 nozzle.json;datadir/system/profiles/BBL/process/0.20mm Standard @BBL P2S.json'");
+		slicerFlags:Add("--load-filaments='datadir/system/profiles/BBL/filament/Generic PLA @BBL P2S.json'");
 
         ProcessListener listener // get error message if necessary (not exit code)
         slicerProgram:AddListener(listener)
@@ -82,19 +80,21 @@ class Slicer
         outDirSubDirs:CreateDirectory()
 
         // extract the 3mf archive (convert extension name to zip)
+        // old 3mf skeleton kept as some printers work directly on 3mf not gcode
+//        text 3mfName = sliceDataBaseName + ".3mf"
         text zipName = sliceDataBaseName + ".zip"
         // output sliceArchive:GetAbsolutePath()
-        if sliceArchive:Exists() not= true
-            output sliceArchiveName + " archive file not found"
-            return false
-        end
-        boolean result = sliceArchive:Move(temp_dir_name + "/" + zipName)
-        if result not= true
-            output "Failed to move: " + zipName
-            return false
-        end
+ //       if sliceArchive:Exists() not= true
+//            output sliceArchiveName + " archive file not found"
+//            return false
+//        end
+//        boolean result = sliceArchive:Move(temp_dir_name + "/" + zipName)
+//        if result not= true
+//            output "Failed to move: " + zipName
+//            return false
+//        end
         sliceArchive:SetWorkingDirectory(outDirTmp:GetPath())
-        sliceArchive:SetWorkingDirectory(workingDir + "\" + temp_dir_name)
+        sliceArchive:SetWorkingDirectory(workingDir + "/" + temp_dir_name)
         sliceArchive:SetPath(zipName) // update path
 //        output 1
 //        output sliceArchive:GetAbsolutePath()
@@ -113,7 +113,7 @@ class Slicer
             output "gcode file not found"
             return false
         end
-        text outGCodeFileName = "model.gcode"
+        text outGCodeFileName = modelFile:GetNameNoExtension() + ".gcode"
         result = outGCodeFile:Move(workingDir + "/" + outGCodeFileName)
         if result not= true
             output "Failed to move gcode file"
@@ -121,16 +121,13 @@ class Slicer
         end
         output "GCode file extracted to: " + outGCodeFile:GetAbsolutePath()
         outDirTmp:Delete(true) // recursively delete tmp dir
+        outDirTmp:Delete()
 
         return true
     end
 
     // This version needs to generate the obj file to send to our slicer
-    action Slice(ModelData data, File outDir) returns boolean
-        if outDir not= undefined
-//            output "undefined outer!"
-            SetWorkingDirectory(outDir)
-        end
+    action Slice(ModelData data, File outModelPrintDataOBJ) returns boolean
         text workingDir = workingDirRef:GetWorkingDirectory()
         output "Slicer working path: " + workingDir
 
@@ -143,24 +140,23 @@ class Slicer
         numFiles = meshes:GetSize() // currently: each mesh generates an obj + gcode
         text fileName = "model.obj"
         integer mi = 0
-        repeat while mi < meshes:GetSize()
+//        repeat while mi < meshes:GetSize()
 //            mi = mi + 1
 //            MeshData mesh = meshes:Get(mi)
 //            File outFileOBJ = modelPrintDataFilesOBJ:Get(mi)
-//            WriteModelDataToOBJ(mesh, workingDir, fileName, outFileOBJ)
-        end
+//            WriteModelDataToOBJ(mesh, fileName, outModelPrintDataOBJ)
+//        end
         MeshData mesh = meshes:Get(mi)
-        File outFileOBJ = modelPrintDataFileOBJ
-        WriteModelDataToOBJ(mesh, workingDir, fileName, modelPrintDataFileOBJ)
+        WriteModelPrintDataToOBJ(mesh, workingDir, fileName, outModelPrintDataOBJ)
 
-        return Slice(modelPrintDataFileOBJ, gCodeFile, undefined)
+        return Slice(outFileOBJ, gCodeFile)
     end
 
     action SetWorkingDirectory(File outDir)
         workingDirRef = outDir
     end
 
-    action WriteModelDataToOBJ(/* Array<MeshData> meshes */ MeshData mesh, text relDirPath, text fileName, File outFile)
+    action WriteModelPrintDataToOBJ(/* Array<MeshData> meshes */ MeshData mesh, text fileName, File outFile)
         // Will delete any existing obj file to write our file!
         outFile:SetWorkingDirectory(relDirPath)
         outFile:SetPath(fileName)
