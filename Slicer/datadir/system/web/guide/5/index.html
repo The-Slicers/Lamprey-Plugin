@@ -1,0 +1,45 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="max-age=7200" />
+<title>引导_P1</title>
+<link rel="stylesheet" type="text/css" href="../../include/global.css" />	<!-- ORCA One for all-->
+<link rel="stylesheet" type="text/css" href="../css/common.css" />	
+<link rel="stylesheet" type="text/css" href="../css/dark.css" />		
+<link rel="stylesheet" type="text/css" href="5.css" />
+<script type="text/javascript" src="../../include/jquery-3.6.0.min.js"></script>
+<script type="text/javascript" src="../js/json2.js"></script>	
+<script type="text/javascript" src="../../include/i18n.js"></script>	
+<script type="text/javascript" src="../js/globalapi.js"></script>	
+<script type="text/javascript" src="../js/common.js"></script>
+<script type="text/javascript" src="5.js"></script>	
+</head>
+<body onLoad="OnInit()">
+<div id="Title">
+	<div data-i18n="proprietary_plugins">Proprietary Plugins</div>
+</div>
+<div id="Content">
+
+    <div id="FeatureText">
+		<div><a class="TextS1" data-i18n="proprietary_plugins_desc">Some printer vendors require proprietary plugins for communication with their printers. Please select the corresponding plugin if you use such printers.</a></div>
+		<div><a class="TextS1" data-i18n="proprietary_plugins_risk">Please be aware that these plugins are not developed or maintained by OrcaSlicer. They should be used at your own discretion and risk.</a></div>
+
+		<!-- <div><span class="TextPoint">●</span>&nbsp;&nbsp;<a tid="t65" class="trans" ></a></div>
+	    <div><span class="TextPoint">●</span>&nbsp;&nbsp;<a tid="t66" class="trans" ></a></div>
+        <div><span class="TextPoint">●</span>&nbsp;&nbsp;<a tid="t67" class="trans" ></a></div>
+		<div><span class="TextPoint">●</span>&nbsp;&nbsp;<a tid="t68" class="trans" ></a></div> -->
+    </div>
+	
+	
+	<!-- ORCA use label tag to allow checkbox to toggle when user clicked to text -->
+	<label id="CheckArea"><input id="InstallCheck" onClick="SendInstallPluginCheck()" type="checkbox"><a class="TextS1" data-i18n="install_bambu_plugin">Install Bambu Network plug-in</a></label>
+	<div id="RestartText"></div>
+	
+</div>
+<div id="AcceptArea">
+	<div class="ButtonStyleRegular ButtonTypeChoice" id="PreBtn" onclick="window.history.back()" data-i18n="back">Back</div>
+	<div class="ButtonStyleConfirm ButtonTypeChoice" id="AcceptBtn" onclick="FinishGuide()" data-i18n="finish">Finish</div>
+</div>	
+</body>
+</html>
